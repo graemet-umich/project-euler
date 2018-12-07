@@ -1,9 +1,9 @@
 name:                pe-haskell
 version:             0.1.0.0
-github:              "graemetank/pe-haskell"
+github:              "graemet-umich/pe-haskell"
 license:             BSD3
 author:              "Graeme Tank"
-maintainer:          "graemet (at) comcast (dot) net"
+maintainer:          "graemet (at) umich (dot) edu"
 copyright:           "value"
 
 extra-source-files:
