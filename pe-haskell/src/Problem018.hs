@@ -18,6 +18,7 @@ n-1. Repeat. For example:
 module Problem018
     ( problem018
     , maxPathSum
+    , parse
     ) where
 
 problem018 :: IO ()
