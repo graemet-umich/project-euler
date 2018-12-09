@@ -17,9 +17,11 @@ n-1. Repeat. For example:
 
 module Problem018
     ( problem018
-    , maxPathSum
-    , parse
+    , maxPathSum  -- for problem 67 too
+    , parse       -- for problem 67
     ) where
+
+import PE.Utils (split)
 
 problem018 :: IO ()
 problem018 = do
@@ -34,16 +36,6 @@ parse = stringssToTriangle . map (split ' ') . lines
 
 stringssToTriangle :: [[String]] -> Triangle
 stringssToTriangle = map (\rowStr -> map (\nStr -> read nStr ::Int) rowStr)
-
-split :: Char -> String -> [String]
-split c s = split' s []
-  where split' s acc
-          | s  == "" = acc
-          | s  == [c] = acc ++ [""] ++ [""]  -- from more than 1 trailing c
-          | s2 == "" = acc ++ [s1]  -- end
-          | otherwise = split' (tail s2) (acc ++ [s1])
-          where s1 = takeWhile (/= c) s
-                s2 = dropWhile (/= c) s
 
 maxPathSum :: Triangle -> Int
 maxPathSum = head . foldr1 addRows
