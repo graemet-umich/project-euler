@@ -21,6 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/grae
 
 dependencies:
 - base >= 4.7 && < 5
+- time
 
 library:
   source-dirs: src
@@ -35,7 +36,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - pe-haskell
-
+    
 tests:
   pe-haskell-test:
     main:                Spec.hs
@@ -47,3 +48,4 @@ tests:
     dependencies:
     - pe-haskell
     - hspec
+
