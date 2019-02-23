@@ -16,7 +16,7 @@ spec =
         ans = []
     test_dcf n d ans
 
---test_dcf :: Ratio Integer ratio => Int -> Int -> ratio -> SpecWith ()
+test_dcf :: Int -> Int -> [Ratio Int] -> SpecWith ()
 test_dcf n d ans =
   it ("the digit cancelling fraction(s) for " ++ (show n) ++
       "/" ++ (show d) ++
