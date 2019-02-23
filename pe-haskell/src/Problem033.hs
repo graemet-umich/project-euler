@@ -15,6 +15,7 @@ module Problem033
 
 import Data.Char (digitToInt)
 import Data.Ratio
+import PE.Utils (digits)
 
 problem033 :: IO ()
 problem033 = do
@@ -47,8 +48,3 @@ dcf n d = filter (== r0) [r1, r2] where
   r0 = n % d
   r1 = if dn!!0 == dd!!1 && dd!!0 /= 0 then dn!!1 % dd!!0 else 0
   r2 = if dn!!1 == dd!!0 && dd!!1 /= 0 then dn!!0 % dd!!1 else 0
-  
--- Convert an integer to a list of digits.
-digits :: (Integral int, Show int) => int -> [Int]
-digits = map digitToInt . show
-
