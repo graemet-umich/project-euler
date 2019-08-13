@@ -4,12 +4,14 @@
 module PE.Utils
   (
     -- Combinatorics
-    nCkEnum,
-    nPkEnum,
+    nCkEnum
+  , nPkEnum
     -- Utilities
-    digits,
-    digitsToInt,
-    split
+  , modExp
+  , modPow
+  , digits
+  , digitsToInt
+  , split
   ) where
 
 import Data.Char (digitToInt)
@@ -37,6 +39,19 @@ nCkEnum xs k
 nPkEnum :: [a] -> Int -> [[a]]
 nPkEnum xs = concatMap permutations . nCkEnum xs
 
+-- Raise b to the power of e modulus modMax.
+-- b^e mod modMax
+modExp :: Integer -> Integer -> Integer -> Integer
+modExp b e modMax
+  | e == 0 = 1
+  | e == 1 = b
+  | even e = mod (expbd * expbd) modMax
+  | otherwise = mod (expbd * expbd1) modMax
+  where d = div e 2
+        expbd  = modExp b d modMax
+        expbd1 = modExp b (d + 1) modMax
+
+modPow = modExp
 
 -----
 -- Utilities
