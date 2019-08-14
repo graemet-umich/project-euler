@@ -4,7 +4,10 @@
 module PE.Utils
   (
     -- Combinatorics
-    nCkEnum
+    nCk
+  , choose
+  , nCkEnum
+  , nPk
   , nPkEnum
     -- Utilities
   , modExp
@@ -20,10 +23,18 @@ import Data.List (permutations, tails)
 -----
 -- Combinatorics
 
+-- The binomial coefficient, n choose k.
+nCk :: Integral i => i -> i -> i
+nCk _ 0 = 1
+nCk 0 _ = 0
+nCk n k = nCk (n - 1) (k - 1) * n `div` k
+
+choose = nCk
+
 -- Also known as enumerate n choose k.
 -- Enumerate all k length combinations of xs. 
 nCkEnum :: [a] -> Int -> [[a]]
-nCkEnum [] _ = [[]]
+nCkEnum [] _ = []
 nCkEnum  _ 0 = [[]]
 nCkEnum xs k 
   | n < k = []
@@ -34,6 +45,12 @@ nCkEnum xs k
   where n = length xs
         f (y:ys, k') = map (y:) $ nCkEnum ys (k' - 1)
 
+-- k-permutations of n, aka partial permutations
+nPk :: Integral i => i -> i -> i
+nPk _ 0 = 1
+nPk 0 _ = 0
+nPk n k = nPk (n - 1) (k - 1) * n
+
 -- Enumerate all k length permutations of xs. NB length nPn = n! =
 -- number of permutations of n elements.
 nPkEnum :: [a] -> Int -> [[a]]
@@ -41,7 +58,7 @@ nPkEnum xs = concatMap permutations . nCkEnum xs
 
 -- Raise b to the power of e modulus modMax.
 -- b^e mod modMax
-modExp :: Integer -> Integer -> Integer -> Integer
+modExp :: Integral i => i -> i -> i -> i
 modExp b e modMax
   | e == 0 = 1
   | e == 1 = b
