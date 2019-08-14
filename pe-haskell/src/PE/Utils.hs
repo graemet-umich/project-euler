@@ -32,18 +32,20 @@ nCk n k = nCk (n - 1) (k - 1) * n `div` k
 choose = nCk
 
 -- Also known as enumerate n choose k.
--- Enumerate all k length combinations of xs. 
+-- Enumerate all k length combinations of xs.
 nCkEnum :: [a] -> Int -> [[a]]
 nCkEnum [] _ = []
-nCkEnum  _ 0 = [[]]
-nCkEnum xs k 
-  | n < k = []
-  | otherwise = concatMap f .
-                take (n - k + 1) .
-                map (\ts -> (ts, k)) .
-                tails $ xs
-  where n = length xs
-        f (y:ys, k') = map (y:) $ nCkEnum ys (k' - 1)
+nCkEnum xs k = go xs k where
+  go [] _ = [[]]
+  go  _ 0 = [[]]
+  go xs k 
+    | n < k = []
+    | otherwise = concatMap f .
+                  take (n - k + 1) .
+                  map (\ts -> (ts, k)) .
+                  tails $ xs
+    where n = length xs
+          f (y:ys, k') = map (y:) $ go ys (k' - 1)
 
 -- k-permutations of n, aka partial permutations
 nPk :: Integral i => i -> i -> i
