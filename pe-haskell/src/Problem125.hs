@@ -18,7 +18,6 @@ module Problem125
   , palindromicSum
   ) where
 
-import Data.List (splitAt)
 import qualified Data.Set as Set 
 
 problem125 :: IO ()
@@ -44,12 +43,7 @@ allCSS nMax = Set.fromList $ concatMap (consecSqSums nMax) [1..limit] where
 
 -- All the palindromic consecutive squares sums.
 allPCSS :: Integer -> Set.Set Integer
-allPCSS = Set.filter isPalindromeInt . allCSS
+allPCSS = Set.filter isPalindrome . allCSS
 
-isPalindromeInt :: Integer -> Bool
-isPalindromeInt = isPalindrome . show
-
-isPalindrome :: Eq a => [a] -> Bool
-isPalindrome xs = all (\(f', rl') -> f' == rl') $ zip f rl where
-  (f, l) = splitAt (length xs `div` 2) xs
-  rl = reverse l
+isPalindrome :: Show a => a -> Bool
+isPalindrome n = show n == reverse (show n)
