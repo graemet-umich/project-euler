@@ -10,27 +10,27 @@ spec = do
         layers = [22, 46, 78, 118]
     it ("The first four layers of cuboid " ++ (show cuboid) ++
         " have " ++ (show layers) ++ " cubes.") $ do
-      take 4 (enumLayers cuboid) `shouldBe` layers
+      take 4 (enumLayerSizes cuboid) `shouldBe` layers
     let cuboid = (5, 1, 1)
         layer = 22
     it ("The first layer of cuboid " ++ (show cuboid) ++
         " has " ++ (show layer) ++ " cubes.") $ do
-      head (enumLayers cuboid) `shouldBe` layer
+      head (enumLayerSizes cuboid) `shouldBe` layer
     let cuboid = (5, 3, 1)
         layer = 46
     it ("The first layer of cuboid " ++ (show cuboid) ++
         " has " ++ (show layer) ++ " cubes.") $ do
-      head (enumLayers cuboid) `shouldBe` layer
+      head (enumLayerSizes cuboid) `shouldBe` layer
     let cuboid = (7, 2, 1)
         layer = 46
     it ("The first layer of cuboid " ++ (show cuboid) ++
         " has " ++ (show layer) ++ " cubes.") $ do
-      head (enumLayers cuboid) `shouldBe` layer
+      head (enumLayerSizes cuboid) `shouldBe` layer
     let cuboid = (11, 1, 1)
         layer = 46
     it ("The first layer of cuboid " ++ (show cuboid) ++
         " has " ++ (show layer) ++ " cubes.") $ do
-      head (enumLayers cuboid) `shouldBe` layer
+      head (enumLayerSizes cuboid) `shouldBe` layer
 
   describe "C(n) is the number of cuboids that contain n cubes in one of its layers." $ do
     let n = 22
