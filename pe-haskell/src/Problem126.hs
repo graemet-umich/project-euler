@@ -11,6 +11,7 @@ module Problem126
   , enumLayerSizes
   ) where
 
+import qualified Data.IntMap as IntMap
 import qualified Data.Set as Set
 
 problem126 :: IO ()
@@ -21,13 +22,56 @@ type Cuboid = (Int, Int, Int)  -- dimensions of a cuboid
 type Cube = Cuboid             -- coordinates of a cube 
 
 iC :: Int -> Int
-iC nCuboids = 42
+iC nCuboids = 2
 
-_C :: Int -> Int
-_C n = 2
 
 {-
+This works but:
+Test case C(154)=10 -> 0.4".
+C(1000) = 54 -> 39".
+C(2000) = 84 -> 3'30"
+Need C(n) = 1000
+-}
+_C :: Int -> Int
+_C n = hist n IntMap.! n
+
+-- Bin the counts where key = nCubes in layer and val = number of
+-- distinct layers.
+hist :: Int -> IntMap.IntMap Int
+hist = layerCounts .
+       flip zip [1,1..] .
+       concatMap snd .
+       concat .
+       concat .
+       cs
+
+-- Loop through all (a,b,c) cuboids and their layers with nCubes no
+-- greater than n.
+as :: Int -> Int -> Int -> [(Cuboid, [Int])]
+as n c b =
+  takeWhile (\(cuboid, layers) -> layers /= []) .
+  map (\cuboid -> (cuboid, takeWhile (<= n) $ enumLayerSizes cuboid)) .
+  map (\a -> (a,b,c)) $
+  [b..]
+bs :: Int -> Int -> [[(Cuboid, [Int])]]
+bs n c = takeWhile (/= []) $ map (as n c) [c..]
+cs :: Int -> [[[(Cuboid, [Int])]]]
+cs n = takeWhile (/= []) $ map (bs n) [1..]
+
+-- Generate the histogram in a map where IntMap.fromListWith is O(32 n).
+-- TODO try using an array where Array.accum might have lower O(n).
+layerCounts :: [(IntMap.Key, Int)] -> IntMap.IntMap Int
+layerCounts = IntMap.fromListWith (+)
+
+addLayerCounts :: IntMap.IntMap Int -> [(IntMap.Key, Int)] -> IntMap.IntMap Int
+addLayerCounts m = IntMap.unionWith (+) m . IntMap.fromListWith (+) 
+    
+
+{-
+TODO low priority but interesting:
 Keep this for now to work on a closed form solution.
+SOME of these closed forms are wrong.
+
 
 Given the below examples:
 1. curve fit degree 2 polynomial to first 3 points
@@ -107,16 +151,13 @@ a(n) = 4*n^2 + 24*n + 18
 (2,2,2)
 8 times triangular numbers
 a(n) = a(n-1) + 8*n, a(0)=0
-a(n) = 4*n*(n+1)
-     = (2*n+1)^2 - 1
+a(n) = 4*n^2 + 12*n + 8
 [24,48,80,120,168,224,288,360,440,528,624,728,840,960]
 
 (3,2,2)
 a(n) = a(n-1) + 8*n - 4, a(1)=0
-a(n) = (2*n)^2 - 4
+a(n) = 4*n^2 + 16*n + 12
 [32,60,96,140,192,252,320,396,480,572,672,780,896]
-
-
 
 
 (3,3,2)
@@ -128,6 +169,9 @@ a(n) = 4*n^2 + 24*n + 26
 [54,90,134,186,246,314,390,474,566,666,774,890]
 
 -}
+
+-- TODO NEXT need to find large layers fast.
+-- Don't need to enumerate, just solve for n.
 
 -- Given a cuboid, enumerate the number of cubes in successive cover
 -- layers.
@@ -161,7 +205,7 @@ nextLayer layer = Set.unions [newposxs, newnegxs,
                               newposys, newnegys,
                               newposzs, newnegzs]
                   Set.\\ layer
-  where  -- TODO switch to 3-element array and pass projection axis as 0, 1, or 2 
+  where  -- TODO switch to 3-element list and pass projection axis as 0, 1, or 2 
     nnxs =  Set.filter (\(x,_,_) -> x >= 0) layer
     newposxs = Set.map (\(x,y,z) -> (  x+1 ,y,z)) nnxs
     newnegxs = Set.map (\(x,y,z) -> (-(x+1),y,z)) nnxs
