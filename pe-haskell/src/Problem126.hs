@@ -2,6 +2,29 @@
 
 {-
 
+Cuboid (a,b,c) has first layer size 2(ab + ac + bc)
+
+Find the maximum cuboid dimensions no greater than nMax cubes.
+cMax:
+6cc = nMax
+cMax = sqrt(nMax/6)
+
+bMax:
+2(bb + bc + bc) = nMax
+2bb + 4bc = nMax
+bMax = (-4c + sqrt(16cc + 8nMax)) / 4
+
+aMax:
+a(b + c) = n/2 - bc
+aMax = (nMax / 2 - bc) / (b + c)
+
+For the test cases, nMax = 54 -> cMax = 5. 
+
+Looking ahead to a solution by extrapolating linear fit lm(formula =
+C(n) ~ n) over range 22 < n < 2000, fit slope=0.040838, so n ~
+1000/slope = 24487. Use this n as nMax, and if a solution for
+C(n)=1000 is not found, bump nMax higher.
+
 -}
 
 module Problem126
@@ -19,11 +42,11 @@ problem126 = print $ iC 1000
 
 -- A cubiod (a, b, c) always satisfies a >= b >= c.
 type Cuboid = (Int, Int, Int)  -- dimensions of a cuboid 
-type Cube = Cuboid             -- coordinates of a cube 
+type Cube = Cuboid             -- coordinates of a cube
+type Coefs = Cuboid            -- coefficients of fitted quadratic
 
 iC :: Int -> Int
 iC nCuboids = 2
-
 
 {-
 This works but:
@@ -45,9 +68,25 @@ hist = layerCounts .
        concat .
        cs
 
+
+-- Directly calculate Cuboid limits to not exceed a cuboid first layer
+-- having more than nMax cubes.
+-- To partially replace as,bs,cs functions.
+cuboids :: Int -> [Cuboid]
+cuboids nMax = [ (a,b,c) |
+                c <- [1..cMax],
+                let bMax = (-4*c + rsqrti (16*c*c + 8*nMax)) `div` 4,
+                b <- [c .. bMax],
+                let aMax = ((nMax `div` 2) - b*c) `div` (b + c),
+                a <- [b .. aMax] ]
+  where
+    cMax = round . sqrt $ (fromIntegral nMax) / 6
+    sqrti = sqrt . fromIntegral
+    rsqrti = round . sqrti
+
 -- Loop through all (a,b,c) cuboids and their layers with nCubes no
 -- greater than n.
-as :: Int -> Int -> Int -> [(Cuboid, [Int])]
+--as :: Int -> Int -> Int -> [(Cuboid, [Int])]
 as n c b =
   takeWhile (\(cuboid, layers) -> layers /= []) .
   map (\cuboid -> (cuboid, takeWhile (<= n) $ enumLayerSizes cuboid)) .
@@ -198,6 +237,11 @@ fitQuad (a1:a2:a3:[]) = (a, b, c) where
   a = (a3 - 2 * a2 + a1) `div` 2
   b = a2 - a1 - 3*a
   c = a1 - a - b
+
+
+-- TODO next 3 functions. Find better algorithm to get layer (or
+-- cuboid shell) directly, without set diff'ing away the previous
+-- layer or cuboid interior.
 
 -- Project along 3 axes new cubes onto layer. 
 nextLayer :: Set.Set Cube -> Set.Set Cube
