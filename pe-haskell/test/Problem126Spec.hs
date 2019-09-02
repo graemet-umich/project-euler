@@ -51,8 +51,8 @@ spec = do
       _C n `shouldBe` _C_n
 
   describe "iC(nCuboids) = n is the least value of n for which C(n) = nCuboids." $ do
-    let nCuboids = 2
-        iC_nCuboids = 22
+    let nCuboids = 1
+        iC_nCuboids = 6
     it ("iC(" ++ (show nCuboids) ++ ") = " ++ (show iC_nCuboids)) $ do
       iC nCuboids `shouldBe` iC_nCuboids
     let nCuboids = 10

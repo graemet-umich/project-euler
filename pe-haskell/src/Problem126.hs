@@ -21,9 +21,12 @@ aMax = (nMax / 2 - bc) / (b + c)
 For the test cases, nMax = 54 -> cMax = 5. 
 
 Looking ahead to a solution by extrapolating linear fit lm(formula =
-C(n) ~ n) over range 22 < n < 2000, fit slope=0.040838, so n ~
-1000/slope = 24487. Use this n as nMax, and if a solution for
+C(n) ~ n) over range 22 < n < 2000, fit slope=0.040838 (1/25), so n ~
+1000/slope = 25000. Use this n as nMax, and if a solution for
 C(n)=1000 is not found, bump nMax higher.
+
+Better testing with the ratio of (iC(nCuboids) / nCuboids) suggests a
+factor of <20 suffices.
 
 -}
 
@@ -38,17 +41,23 @@ import qualified Data.IntMap as IntMap
 import qualified Data.Set as Set
 
 problem126 :: IO ()
-problem126 = print $ _C 500  -- iC 1000
+problem126 = print $ iC 1000
 
 -- A cubiod (a, b, c) always satisfies a >= b >= c.
 type Cuboid = (Int, Int, Int)  -- dimensions of a cuboid 
 type Cube = Cuboid             -- coordinates of a cube
 type Coefs = Cuboid            -- coefficients of fitted quadratic
 
--- λ> lookup 1 (map (\(x,y) -> (y,x)) . IntMap.toList $ hist 154)
--- Just 6
+-- Find the smallest layer size (number of cubes in layer) that covers
+-- nCuboids distinct cuboids.
 iC :: Int -> Int
-iC nCuboids = 2
+iC nCuboids = n
+  where
+    n_to_nCuboid_ratio = 20
+    nMax = n_to_nCuboid_ratio * nCuboids
+    h = hist nMax
+    ih = map (\(x,y) -> (y,x)) . IntMap.toList $ h
+    Just n = lookup nCuboids ih
 
 {-
 This works but:
