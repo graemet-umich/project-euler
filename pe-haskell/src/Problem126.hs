@@ -38,13 +38,15 @@ import qualified Data.IntMap as IntMap
 import qualified Data.Set as Set
 
 problem126 :: IO ()
-problem126 = print $ iC 1000
+problem126 = print $ _C 500  -- iC 1000
 
 -- A cubiod (a, b, c) always satisfies a >= b >= c.
 type Cuboid = (Int, Int, Int)  -- dimensions of a cuboid 
 type Cube = Cuboid             -- coordinates of a cube
 type Coefs = Cuboid            -- coefficients of fitted quadratic
 
+-- λ> lookup 1 (map (\(x,y) -> (y,x)) . IntMap.toList $ hist 154)
+-- Just 6
 iC :: Int -> Int
 iC nCuboids = 2
 
@@ -67,7 +69,6 @@ hist = layerCounts .
        concat .
        concat .
        cs
-
 
 -- Directly calculate Cuboid limits to not exceed a cuboid first layer
 -- having more than nMax cubes.
@@ -291,26 +292,23 @@ da46 = Set.fromList [(3,1,0), (3,-1,0),(-3,1,0), (-3,-1,0),
 -- Return the surface cubes of the initial cuboid measuring a x b x c;
 -- for cuboids with c < 3, this is the entire cuboid.
 -- Note for even cuboid sides, there is no 0, which leverages symmetry.
--- [The "solid - interior" method is easy but does not scale
--- well, e.g. 100^3 cuboid takes 4+ sec to build.]
+-- Builds a 100^3 cuboid in 0.1 sec.
 buildCuboid :: Cuboid -> Set.Set Cube
 buildCuboid (a,b,c)
   | a < b = error "buildCuboid (a,b,c): a < b"
   | b < c = error "buildCuboid (a,b,c): b < c"
-  | c < 3 = solid
-  | otherwise = layer
+  | otherwise = Set.unions . map Set.fromList $ [pxs,pys,pzs,nxs,nys,nzs]
   where
-    xs = getRange a
-    ys = getRange b
-    zs = getRange c
-    solid = Set.fromList [ (x,y,z) | x <- xs, y <- ys, z <- zs ]
-    xs' = getRange (a - 2)
-    ys' = getRange (b - 2)
-    zs' = getRange (c - 2)
-    interior = Set.fromList [ (x',y',z') | x' <- xs', y' <- ys', z' <- zs' ]
-    layer = solid Set.\\ interior
-      
-
+    x = a `div` 2
+    y = b `div` 2
+    z = c `div` 2
+    pxs = [ ( x,  j,  k) | j <- getRange b, k <- getRange c ] 
+    pys = [ ( i,  y,  k) | i <- getRange a, k <- getRange c ] 
+    pzs = [ ( i,  j,  z) | i <- getRange a, j <- getRange b ] 
+    nxs = map (\(i,j,k) -> (-i,j,k)) pxs
+    nys = map (\(i,j,k) -> (i,-j,k)) pys
+    nzs = map (\(i,j,k) -> (i,j,-k)) pzs
+    
 getRange :: Int -> [Int]
 getRange x
   | odd x = 0 : [1..halfx] ++ map (* (-1)) [1..halfx]
