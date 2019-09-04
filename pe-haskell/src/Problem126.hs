@@ -2,31 +2,48 @@
 
 {-
 
-Cuboid (a,b,c) has first layer size 2(ab + ac + bc)
+The two primary probems to solve are efficient enumeration of the
+cuboid space and efficient enumeration of cuboid layers.
 
-Find the maximum cuboid dimensions no greater than nMax cubes.
-cMax:
-6cc = nMax
-cMax = sqrt(nMax/6)
+Enumeration of the cuboid space
+-------------------------------
+Implemented in function cuboids.
+
+Cuboid (a,b,c) has first layer size 2(ab + ac + bc).
+
+Find the maximum cuboid dimensions such that the first layer has no
+more than nMax cubes, i.e. nMax >= 2(ab + ac + bc).
+
+For the larger test cases, nMax = 78 (cMax = 3), nMax = 118
+(cMax = 4), and nMax = 154 (cMax = 5).
+
+cMax is found using a cube cuboid:
+6cc <= nMax
+cMax <= sqrt(nMax/6)
 
 bMax:
-2(bb + bc + bc) = nMax
-2bb + 4bc = nMax
-bMax = (-4c + sqrt(16cc + 8nMax)) / 4
+2(bb + bc + bc) <= nMax
+2bb + 4bc <= nMax
+bMax <= (-4c + sqrt(16cc + 8nMax)) / 4
 
 aMax:
-a(b + c) = n/2 - bc
-aMax = (nMax / 2 - bc) / (b + c)
-
-For the test cases, nMax = 54 -> cMax = 5. 
+2(a(b + c) + bc) <= nMax
+a(b + c) <= nMax/2 - bc
+aMax <= (nMax / 2 - bc) / (b + c)
 
 Looking ahead to a solution by extrapolating linear fit lm(formula =
 C(n) ~ n) over range 22 < n < 2000, fit slope=0.040838 (1/25), so n ~
 1000/slope = 25000. Use this n as nMax, and if a solution for
-C(n)=1000 is not found, bump nMax higher.
+C(n)=1000 is not found, bump nMax higher. However ...
 
-Better testing with the ratio of (iC(nCuboids) / nCuboids) suggests a
-factor of <20 suffices.
+... better testing with the ratios of (iC(nCuboids) / nCuboids), which
+is linear, suggests a factor of <20 suffices.
+
+Enumeration of cuboid layers
+----------------------------
+Implemented in function enumLayerSizes.
+
+
 
 -}
 
@@ -46,10 +63,9 @@ problem126 = print $ iC 1000
 -- A cubiod (a, b, c) always satisfies a >= b >= c.
 type Cuboid = (Int, Int, Int)  -- dimensions of a cuboid 
 type Cube = Cuboid             -- coordinates of a cube
-type Coefs = Cuboid            -- coefficients of fitted quadratic
 
--- Find the smallest layer size (number of cubes in layer) that covers
--- nCuboids distinct cuboids.
+-- Find the smallest layer size n (number of cubes in layer) that
+-- covers nCuboids distinct cuboids.
 iC :: Int -> Int
 iC nCuboids = n
   where
@@ -57,15 +73,11 @@ iC nCuboids = n
     nMax = n_to_nCuboid_ratio * nCuboids
     h = hist nMax
     ih = map (\(x,y) -> (y,x)) . IntMap.toList $ h
-    Just n = lookup nCuboids ih
+    n
+      | Just n' <- lookup nCuboids ih = n'
+      | Nothing <- lookup nCuboids ih = 0
 
-{-
-This works but:
-Test case C(154)=10 -> 0.4".
-C(1000) = 54 -> 39".
-C(2000) = 84 -> 3'30"
-Need C(n) = 1000
--}
+-- The number of distinct cuboids with n cubes in one of their layers.
 _C :: Int -> Int
 _C n = hist n IntMap.! n
 
@@ -115,189 +127,15 @@ layerCounts = IntMap.fromListWith (+)
 addLayerCounts :: IntMap.IntMap Int -> [(IntMap.Key, Int)] -> IntMap.IntMap Int
 addLayerCounts m = IntMap.unionWith (+) m . IntMap.fromListWith (+) 
     
-
-{-
-TODO low priority but interesting:
-Keep this for now to work on a closed form solution.
-SOME of these closed forms are wrong.
-
-
-Given the below examples:
-1. curve fit degree 2 polynomial to first 3 points
-2. find closed form solution as function of cuboid
-
-
--------
-(a,1,1)
-a(n) = 4*n^2 + 4*(a-1)*n + 2
-
-(1,1,1)
-Coordination sequence for cubic lattice
-Recurrence: n*a(n) = (n-2)*a(n-2) + 6*a(n-1), a(0)=1, a(1)=6
-Closed:     a(n)   = 4*n^2 + 2
-[6,18,38,66,102,146,198,258,326,402,486,578,678,786,902]
-
-(2,1,1)
-Centered square numbers
-a(n) = 8*n + a(n-1) for n > 0, a(0)=2
-a(n) = 4*n^2 + 4*n + 2
-     = (2*n + 1)^2 + 1
-[10,26,50,82,122,170,226,290,362,442,530,626,730,842,962]
-
-(3,1,1)
-Number of right triangles of a given area required to form successively larger squares.
-a(n) = 8*n + a(n-1) + 4 with n>0, a(0)=2
-a(n) = 4*n^2 + 8*n + 2
-[14,34,62,98,142,194,254,322,398,482,574,674,782,898]
-
-(4,1,1)
-a(n) = 4*n^2 + 12*n + 2
-[18,42,74,114,162,218,282,354,434,522,618,722,834,954]
-
-
--------
-(a,2,1)
-a(n) = 4*n^2 + 4*a*n + a*b
-
-(2,2,1)
-Even squares
-a(n) = a(n-1) + 8*n - 4, a(0)=0
-a(n) = 4*n^2 + 8*n + 4
-[16,36,64,100,144,196,256,324,400,484,576,676,784,900]
-
-(3,2,1)
-a(n) = 4*n^2 + 12*n + 6
-[22,46,78,118,166,222,286,358,438,526,622,726,838,958]
-
-(4,2,1)
-a(n) = 4*n^2 + 16*n + 8
-[28,56,92,136,188,248,316,392,476,568,668,776,892]
-
-(5,2,1)
-a(n) = 4*n^2 + 20*n + 10
-[34,66,106,154,210,274,346,426,514,610,714,826,946]
-
-
--------
-(a,3,1)
-a(n) = 4*n^2 + 4*(a+1)*n + a*b + (a-2)
-
-(3,3,1)
-a(n) = 4*n^2 + 16*n + 10
-[30,58,94,138,190,250,318,394,478,570,670,778,894]
-
-(4,3,1)
-a(n) = 4*n^2 + 20*n + 14
-[38,70,110,158,214,278,350,430,518,614,718,830,950]
-
-(5,3,1)
-a(n) = 4*n^2 + 24*n + 18
-[46,82,126,178,238,306,382,466,558,658,766,882]
-
-
-
-
-(2,2,2)
-8 times triangular numbers
-a(n) = a(n-1) + 8*n, a(0)=0
-a(n) = 4*n^2 + 12*n + 8
-[24,48,80,120,168,224,288,360,440,528,624,728,840,960]
-
-(3,2,2)
-a(n) = a(n-1) + 8*n - 4, a(1)=0
-a(n) = 4*n^2 + 16*n + 12
-[32,60,96,140,192,252,320,396,480,572,672,780,896]
-
-
-(3,3,2)
-a(n) = 4*n^2 + 20*n + 18
-[42,74,114,162,218,282,354,434,522,618,722,834,954]
-
-(3,3,3)
-a(n) = 4*n^2 + 24*n + 26
-[54,90,134,186,246,314,390,474,566,666,774,890]
-
--}
-
--- TODO NEXT need to find large layers fast.
--- Don't need to enumerate, just solve for n.
-
 -- Given a cuboid, enumerate the number of cubes in successive cover
--- layers.
--- Start mapping at n=1 instead of n=4, which effectively tests
--- function fitQuad via the test of enumLayerSizes. (There is one test
--- for the 1st four layers of a cuboid, and there are four tests for
--- the 1st layer of a cuboid.)
+-- layers. This implementation is in closed form.
 enumLayerSizes :: Cuboid -> [Int]
-enumLayerSizes cuboid = map (\n -> a*n*n + b*n +c) [1..] where
-  first3 = take 3 . map Set.size . iterate nextLayer . firstLayer $ cuboid
-  (a,b,c) = fitQuad first3
-  -- let's not do:
-  -- first3 ++ map (\n -> a*n*n + b*n + c) [4..]
-
--- Find the first 3 terms with take 3 (enumLayerSizes cuboid).
--- Fit the 1st 3 terms to a quadratic sequence a(n) = a*n^2 + b*n + c.
---   a(1) =  a +  b + c
---   a(2) = 4a + 2b + c
---   a(3) = 9a + 3b + c
--- Use (a,b,c) coefficients to quickly enumerate subsequent layer
--- sizes.
-fitQuad :: [Int] -> (Int, Int, Int)
-fitQuad (a1:a2:a3:[]) = (a, b, c) where
-  a = (a3 - 2 * a2 + a1) `div` 2
-  b = a2 - a1 - 3*a
-  c = a1 - a - b
-
-
--- TODO next 3 functions. Find better algorithm to get layer (or
--- cuboid shell) directly, without set diff'ing away the previous
--- layer or cuboid interior.
-
--- Project along 3 axes new cubes onto layer. 
-nextLayer :: Set.Set Cube -> Set.Set Cube
-nextLayer layer = Set.unions [newposxs, newnegxs,
-                              newposys, newnegys,
-                              newposzs, newnegzs]
-                  Set.\\ layer
-  where  -- TODO switch to 3-element list and pass projection axis as 0, 1, or 2 
-    nnxs =  Set.filter (\(x,_,_) -> x >= 0) layer
-    newposxs = Set.map (\(x,y,z) -> (  x+1 ,y,z)) nnxs
-    newnegxs = Set.map (\(x,y,z) -> (-(x+1),y,z)) nnxs
-
-    nnys =  Set.filter (\(_,y,_) -> y >= 0) layer
-    newposys = Set.map (\(x,y,z) -> (x,  y+1 ,z)) nnys
-    newnegys = Set.map (\(x,y,z) -> (x,-(y+1),z)) nnys
-
-    nnzs =  Set.filter (\(_,_,z) -> z >= 0) layer
-    newposzs = Set.map (\(x,y,z) -> (x,y,  z+1 )) nnzs
-    newnegzs = Set.map (\(x,y,z) -> (x,y,-(z+1))) nnzs
-
-firstLayer :: Cuboid -> Set.Set Cube
-firstLayer cuboid = layer Set.\\ cubes
+enumLayerSizes cuboid@(a,b,c) = map (+ l1) $ 0 : map fl [1..]
   where
-    cubes = buildCuboid cuboid
-    layer  = nextLayer cubes
+    l1 = 2 * (a*b + a*c + b*c)
+    abc = a + b + c
+    fl n = 4*n*(abc + n - 1)
 
-{- private
-da22 :: Set.Set Cube
-da22 = Set.fromList [(2,1,0), (-2,1,0), (2,-1,0), (-2,-1,0),
-                     (-1,2,0),(0,2,0),(1,2,0),(-1,-2,0),(0,-2,0),(1,-2,0),
-                     (-1,1,1),(0,1,1),(1,1,1),(-1,-1,1),(0,-1,1),(1,-1,1),
-                     (-1,1,-1),(0,1,-1),(1,1,-1),(-1,-1,-1),(0,-1,-1),(1,-1,-1)]
-
-da46 :: Set.Set Cube
-da46 = Set.fromList [(3,1,0), (3,-1,0),(-3,1,0), (-3,-1,0),
-                     (2,1,1), (2,-1,1),(2,1,-1), (2,-1,-1),(2,2,0),(2,-2,0),
-                     (-2,1,1), (-2,-1,1),(-2,1,-1), (-2,-1,-1),(-2,2,0),(-2,-2,0),
-                     (1,3,0), (1,-3,0),
-                     (1,2,1), (1,-2,1), (1,2,-1), (1,-2,-1),
-                     (1,1,2), (1,-1,2), (1,1,-2), (1,-1,-2), 
-                     (-1,3,0), (-1,-3,0),
-                     (-1,2,1), (-1,-2,1), (-1,2,-1), (-1,-2,-1),
-                     (-1,1,2), (-1,-1,2), (-1,1,-2), (-1,-1,-2)
-                    ]
--}
-  
 -- Return the surface cubes of the initial cuboid measuring a x b x c;
 -- for cuboids with c < 3, this is the entire cuboid.
 -- Note for even cuboid sides, there is no 0, which leverages symmetry.
