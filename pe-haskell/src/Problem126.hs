@@ -43,7 +43,45 @@ Enumeration of cuboid layers
 ----------------------------
 Implemented in function enumLayerSizes.
 
+For cuboid (a, b, c), ni is the number of cubes in layer i.
 
+n0 = 2*(ab + ac + bc)
+n1 = n1 + 4(a + b + c)
+n2 = n1 + 8(a + b + c) + 8
+...
+ni = n1 + 4i(a + b + c) + 8(i - 1)i/2
+
+For cuboid (3,2,1), these layers contain 22, 46, 78, and
+4i^2 + 20i + 22 cubes.
+
+From inspecting the first three layers of (a, b, c), the three
+summands of ni can be interpreted geometrically.
+
+Layer i=0 just covers the exterior of the cuboid; this is always the
+face-centered components of subsequent layers.
+
+The next term, 4i(a+b+c), is like 3 staircases a, b, and c cubes
+wide. In the test case illustration, one staircase (width a=3)
+descends down the z axis and up the y axis axes from the face-centered
+(3,2) rectangle to the face-centered (3,1) rectangle. From symmetry,
+there are four such (a) staircases and four (b) and four (c)
+staircases, hence the coefficient 4 in this term. Each successive
+layer adds another step to the staircases.
+
+The last term is the corner case, literally. Let's say an initial
+cuboid is convex. The first layer (i=0) is mostly convex, with the only
+concavities formed by the intersection of two planes, which form the
+staircases from the second term. It is only in the second (i=1) and
+subsequent layers that concavities form from the intersection of three
+planes at the 8 corners.
+
+For a given corner, layer i=1 is missing 1 cube and layer i=2 3
+cubes. Hence layer i=2 must cover the missing corner cube in layer
+i=1, and layer i=3 must cover the 3 missing corner cubes in layer
+i=2. This corner progression is the triangular number sequence, and
+the coefficient 8 comes from the 8-fold corner symmetry. (All layers
+for all cuboids can be fit to quadrics of form 4i^2 + ..., and this
+quadratic term comes from these corner cases: 8 * i(i+1)/2).
 
 -}
 
