@@ -124,14 +124,10 @@ _C n = hist n IntMap.! n
 hist :: Int -> IntMap.IntMap Int
 hist = layerCounts .
        flip zip [1,1..] .
-       concatMap snd .
-       concat .
-       concat .
-       cs
+       enumTruncLayers
 
 -- Directly calculate Cuboid limits to not exceed a cuboid first layer
 -- having more than nMax cubes.
--- To partially replace as,bs,cs functions.
 cuboids :: Int -> [Cuboid]
 cuboids nMax = [ (a,b,c) |
                 c <- [1..cMax],
@@ -144,27 +140,15 @@ cuboids nMax = [ (a,b,c) |
     sqrti = sqrt . fromIntegral
     rsqrti = round . sqrti
 
--- Loop through all (a,b,c) cuboids and their layers with nCubes no
--- greater than n.
---as :: Int -> Int -> Int -> [(Cuboid, [Int])]
-as n c b =
-  takeWhile (\(cuboid, layers) -> layers /= []) .
-  map (\cuboid -> (cuboid, takeWhile (<= n) $ enumLayerSizes cuboid)) .
-  map (\a -> (a,b,c)) $
-  [b..]
-bs :: Int -> Int -> [[(Cuboid, [Int])]]
-bs n c = takeWhile (/= []) $ map (as n c) [c..]
-cs :: Int -> [[[(Cuboid, [Int])]]]
-cs n = takeWhile (/= []) $ map (bs n) [1..]
+enumTruncLayers :: Int -> [Int]
+enumTruncLayers nMax = concatMap (takeWhile (<= nMax) . enumLayerSizes) $
+                       cuboids nMax
 
 -- Generate the histogram in a map where IntMap.fromListWith is O(32 n).
 -- TODO try using an array where Array.accum might have lower O(n).
 layerCounts :: [(IntMap.Key, Int)] -> IntMap.IntMap Int
 layerCounts = IntMap.fromListWith (+)
 
-addLayerCounts :: IntMap.IntMap Int -> [(IntMap.Key, Int)] -> IntMap.IntMap Int
-addLayerCounts m = IntMap.unionWith (+) m . IntMap.fromListWith (+) 
-    
 -- Given a cuboid, enumerate the number of cubes in successive cover
 -- layers. This implementation is in closed form.
 enumLayerSizes :: Cuboid -> [Int]
