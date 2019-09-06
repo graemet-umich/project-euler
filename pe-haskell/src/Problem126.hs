@@ -109,7 +109,8 @@ iC nCuboids = n
   where
     n_to_nCuboid_ratio = 20
     nMax = n_to_nCuboid_ratio * nCuboids
-    h = hist nMax
+    nMin | nCuboids < 10 = 6 | otherwise = (3 * nMax) ` div` 4
+    h = hist (nMin, nMax)
     ih = map (\(x,y) -> (y,x)) . IntMap.toList $ h
     n
       | Just n' <- lookup nCuboids ih = n'
@@ -117,11 +118,11 @@ iC nCuboids = n
 
 -- The number of distinct cuboids with n cubes in one of their layers.
 _C :: Int -> Int
-_C n = hist n IntMap.! n
+_C n = hist (n, n) IntMap.! n
 
 -- Bin the counts where key = nCubes in layer and val = number of
 -- distinct layers.
-hist :: Int -> IntMap.IntMap Int
+hist :: (Int, Int) -> IntMap.IntMap Int
 hist = layerCounts .
        flip zip [1,1..] .
        enumTruncLayers
@@ -140,9 +141,10 @@ cuboids nMax = [ (a,b,c) |
     sqrti = sqrt . fromIntegral
     rsqrti = round . sqrti
 
-enumTruncLayers :: Int -> [Int]
-enumTruncLayers nMax = concatMap (takeWhile (<= nMax) . enumLayerSizes) $
-                       cuboids nMax
+enumTruncLayers :: (Int, Int) -> [Int]
+enumTruncLayers (nMin, nMax) =
+  concatMap (dropWhile (< nMin) . takeWhile (<= nMax) . enumLayerSizes) $
+  cuboids nMax
 
 -- Generate the histogram in a map where IntMap.fromListWith is O(32 n).
 -- TODO try using an array where Array.accum might have lower O(n).
