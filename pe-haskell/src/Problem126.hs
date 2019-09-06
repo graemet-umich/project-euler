@@ -147,7 +147,8 @@ enumTruncLayers (nMin, nMax) =
   cuboids nMax
 
 -- Generate the histogram in a map where IntMap.fromListWith is O(32 n).
--- TODO try using an array where Array.accum might have lower O(n).
+-- TODO try using an array where Array.accum might have lower O(n). At
+-- this point the overall speed gains would be minimal.
 layerCounts :: [(IntMap.Key, Int)] -> IntMap.IntMap Int
 layerCounts = IntMap.fromListWith (+)
 
