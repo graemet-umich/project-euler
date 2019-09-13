@@ -2,9 +2,9 @@
 
 {-
 
-To find a better algorithm than testing predicate PD(n) = 3 for every
-n > 0, I noticed (while passing the test that the 10th predicate tile
-n = 271) that every n that satisfies the predicate could either be an
+To find a better algorithm than testing predicate PD(n) = 3 (PD3) for
+every n > 0, I noticed (while passing the test that the 10th PD3
+tile n = 271) that every n that satisfies PD3 could either be an
 element in OEIS sequence A077588 or be 1 less than an element in that
 sequence: [1,2,8,19,20,37,61,128,217,271]. This reduced the n search
 space from 14.5e9 to 1.4e5.
@@ -15,9 +15,22 @@ Sequence going up:
     1, 2, 8, 20, 38, 62, 92, 128, 170, 218, 272, 332 ...
     a(n) = 3n^2 - 3n + 2, a(0) = 1
 
+Why can PD3 only be satisfied for the first and last tiles in a ring?
+
+Consider any ring < 1 (start values 8, 20, ...). Every tile n, exept
+the first and last, is neighbors with tiles n-1 and n+1, which are
+excluded, because 1 is not prime; the remaining four neighbors are two
+odd and two even, so the maximum PD = 2. Only the first and last
+tiles, which break this symmetry, can be PD3.
+
 See end comments for using an (i,j) coordinate system to find the 6
 tiles adjacent to tile n, where tile n is the jth tile in the ith
 ring.
+
+In retrospect, I spent too much effort generalizing the function
+adjacents to find the six neighbors of any tile n. The function
+adjacents could be refactored to simply find the neighbors of the
+first and last tiles in a ring.
 
 -}
 
