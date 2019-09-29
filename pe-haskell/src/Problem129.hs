@@ -2,36 +2,39 @@
 
 {-
 
-The ns can only end in 1, 3, 7, or 9. The first n is 3, because
-gcd(1,n) = 1.
+The ns can only end in 1, 3, 7, or 9, because gcd(1,n) = 1.
+
+Use long division to find A(n).
+
+n > A(n) for all n except n = 3^i. For the solution, n >= 1e6 + 1.
 
 -}
 
 module Problem129
-  ( problem129,
-    _A,
-    iAexceeds
+  ( problem129
+  , _A
+  , iAexceeds
   ) where
 
-import Data.Numbers.Primes
-
 problem129 :: IO()
-problem129 = print $ iAexceeds 100
-
+problem129 = print $ iAexceeds 1000000
+  
 iAexceeds :: Integer -> Integer
-iAexceeds k = fst . head .
-              dropWhile (\(_, an) -> an <= k) .
-              map (\n -> (n, _A n)) $ ns
+iAexceeds kMin = fst . head
+                 . dropWhile (\(_, k) -> k <= kMin)
+                 . map (\n -> (n, _A n))
+                 $ nsOver kMin
 
 _A :: Integer -> Integer
-_A n = fst . head .
-       dropWhile (\(_, rkmn) -> rkmn /= 0) .
-       map (\k -> (k, _R k `mod` n)) $ [2..]
+_A n = go 1 1 where
+  go k r
+    | rmn == 0 = k
+    | otherwise = go (k + 1) (10 * rmn + 1)
+    where rmn = r `mod` n
 
--- n > 1 | gcd(10,n) = 1
-ns :: [Integer]
-ns = tail $ concatMap (\i -> map (+ i) [1,3,7,9]) [0,10..]
-
-_R :: Integer -> Integer
-_R k = (10^k - 1) `div` 9
-
+-- n >= nMin >= 0 | gcd(10,n) = 1
+nsOver :: Integer -> [Integer]
+nsOver nMin = dropWhile (<= nMin) .
+              concatMap (\i -> map (+ i) [1,3,7,9]) $
+              [n10, n10 + 10 ..]
+  where n10 = 10 * (nMin `div` 10) 
