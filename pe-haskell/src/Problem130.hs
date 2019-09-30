@@ -12,26 +12,15 @@ module Problem130
   ) where
 
 import Data.Numbers.Primes
+import PE.Repunit (_A, nsOver)
 
 problem130 :: IO()
 problem130 = print . sum $ composites 25
 
+-- "False prime" composites that satisfy pPred
 composites :: Int -> [Integer]
 composites n = take n . filter pPred . filter (not . isPrime) $ nsOver 1
 
+-- For all primes p > 5, A(p) | (p - 1).
 pPred :: Integer -> Bool
 pPred p = (p - 1) `mod` _A p == 0
-  
-_A :: Integer -> Integer
-_A n = go 1 1 where
-  go k r
-    | rmn == 0 = k
-    | otherwise = go (k + 1) (10 * rmn + 1)
-    where rmn = r `mod` n
-
--- n >= nMin >= 0 | gcd(10,n) = 1
-nsOver :: Integer -> [Integer]
-nsOver nMin = dropWhile (<= nMin) .
-              concatMap (\i -> map (+ i) [1,3,7,9]) $
-              [n10, n10 + 10 ..]
-  where n10 = 10 * (nMin `div` 10) 
