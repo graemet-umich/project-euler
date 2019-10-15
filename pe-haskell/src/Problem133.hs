@@ -22,7 +22,6 @@ module Problem133
   , primeNonFactorsRk
   ) where
 
-import Data.List ((\\))
 import Data.Numbers.Primes (primes)
 import PE.Utils (modPow)
 
